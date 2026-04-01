@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/grayashh/buddy-reroll/compare/v0.2.0...v0.2.1) (2026-04-01)
+
+
+### Bug Fixes
+
+* Windows compatibility, UI bugs, code cleanup ([2db4c95](https://github.com/grayashh/buddy-reroll/commit/2db4c95e8d50b42e136916bc78c211726a248e9b))
+
 ## [0.2.0](https://github.com/grayashh/buddy-reroll/compare/v0.1.1...v0.2.0) (2026-04-01)
 
 
