@@ -5,7 +5,8 @@ import { join } from "path";
 import { homedir, platform } from "os";
 import { execSync } from "child_process";
 import { parseArgs } from "util";
-import * as p from "@clack/prompts";
+import chalk from "chalk";
+import { renderSprite, colorizeSprite, RARITY_STARS, RARITY_COLORS } from "./sprites.js";
 
 if (typeof Bun === "undefined") {
   console.error("buddy-reroll requires Bun runtime (uses Bun.hash).\nInstall: https://bun.sh");
@@ -112,7 +113,9 @@ function findBinaryPath() {
   const versionsDir = join(homedir(), ".local", "share", "claude", "versions");
   if (existsSync(versionsDir)) {
     try {
-      const versions = readdirSync(versionsDir).sort();
+      const versions = readdirSync(versionsDir)
+        .filter((f) => !f.includes(".backup"))
+        .sort();
       if (versions.length > 0) return join(versionsDir, versions[versions.length - 1]);
     } catch {}
   }
@@ -181,7 +184,7 @@ function findCurrentSalt(binaryData, userId) {
 
 // ── Brute-force ──────────────────────────────────────────────────────────
 
-function bruteForce(userId, target, spinner) {
+async function bruteForce(userId, target, onProgress) {
   const startTime = Date.now();
   let checked = 0;
 
@@ -206,9 +209,11 @@ function bruteForce(userId, target, spinner) {
     const r = rollFrom(salt, userId);
     if (matches(r, target)) return { salt, result: r, checked, elapsed: Date.now() - startTime };
 
+    if (checked % 100_000 === 0) {
+      await new Promise((r) => setTimeout(r, 0));
+    }
     if (checked % 5_000_000 === 0) {
-      const secs = ((Date.now() - startTime) / 1000).toFixed(1);
-      if (spinner) spinner.message(`${(checked / 1e6).toFixed(0)}M salts checked (${secs}s)`);
+      if (onProgress) onProgress(checked, Date.now() - startTime);
     }
   }
 
@@ -281,165 +286,68 @@ function clearCompanion(configPath) {
 
 // ── Display ──────────────────────────────────────────────────────────────
 
-function formatRoll(result) {
+function formatCompanionCard(result) {
+  const sprite = renderSprite({ species: result.species, eye: result.eye, hat: result.hat });
+  const colored = colorizeSprite(sprite, result.rarity);
+  const colorFn = chalk[RARITY_COLORS[result.rarity]] ?? chalk.white;
+  const stars = RARITY_STARS[result.rarity] ?? "";
+
+  const meta = [];
+  meta.push(`${result.species} / ${result.rarity}${result.shiny ? " / shiny" : ""}`);
+  meta.push(`eye:${result.eye} / hat:${result.hat}`);
+  meta.push(stars);
+
   const lines = [];
-  lines.push(`  ${result.species} / ${result.rarity} / eye:${result.eye} / hat:${result.hat}${result.shiny ? " / shiny" : ""}`);
+  const spriteWidth = 14;
+  for (let i = 0; i < colored.length; i++) {
+    const right = meta[i] ?? "";
+    lines.push(`  ${colored[i]}${" ".repeat(Math.max(0, spriteWidth - sprite[i].length))}${right}`);
+  }
+
   for (const [k, v] of Object.entries(result.stats)) {
-    const bar = "█".repeat(Math.round(v / 10)) + "░".repeat(10 - Math.round(v / 10));
+    const bar = colorFn("█".repeat(Math.round(v / 10)) + "░".repeat(10 - Math.round(v / 10)));
     lines.push(`  ${k.padEnd(10)} ${bar} ${String(v).padStart(3)}`);
   }
+
   return lines.join("\n");
 }
 
 // ── Interactive mode ─────────────────────────────────────────────────────
 
 async function interactiveMode(binaryPath, configPath, userId) {
-  p.intro("buddy-reroll");
-
   const binaryData = readFileSync(binaryPath);
   const currentSalt = findCurrentSalt(binaryData, userId);
   if (!currentSalt) {
-    p.cancel("Could not find companion salt in binary.");
+    console.error("✗ Could not find companion salt in binary.");
     process.exit(1);
   }
   const currentRoll = rollFrom(currentSalt, userId);
-  p.note(formatRoll(currentRoll), "Current companion");
 
-  const action = await p.select({
-    message: "What would you like to do?",
-    options: [
-      { value: "reroll", label: "Reroll companion", hint: "pick species, rarity, etc." },
-      { value: "restore", label: "Restore original", hint: "undo all patches" },
-      { value: "current", label: "Show current", hint: "just display info" },
-    ],
+  const { runInteractiveUI } = await import("./ui.jsx");
+  await runInteractiveUI({
+    currentRoll,
+    currentSalt,
+    binaryPath,
+    configPath,
+    userId,
+    bruteForce,
+    patchBinary,
+    resignBinary,
+    clearCompanion,
+    isClaudeRunning,
+    rollFrom,
+    matches,
+    SPECIES,
+    RARITIES,
+    RARITY_LABELS,
+    EYES,
+    HATS,
   });
-  if (p.isCancel(action)) { p.cancel(); process.exit(0); }
-
-  if (action === "current") {
-    p.outro("Done!");
-    return;
-  }
-
-  if (action === "restore") {
-    const backupPath = binaryPath + ".backup";
-    if (!existsSync(backupPath)) {
-      p.cancel("No backup found. Nothing to restore.");
-      process.exit(1);
-    }
-    copyFileSync(backupPath, binaryPath);
-    resignBinary(binaryPath);
-    clearCompanion(configPath);
-    p.outro("Restored! Restart Claude Code and run /buddy.");
-    return;
-  }
-
-  const species = await p.select({
-    message: "Species",
-    options: SPECIES.map((s) => ({
-      value: s,
-      label: s,
-      hint: s === currentRoll.species ? "current" : undefined,
-    })),
-    initialValue: currentRoll.species,
-  });
-  if (p.isCancel(species)) { p.cancel(); process.exit(0); }
-
-  const rarity = await p.select({
-    message: "Rarity",
-    options: RARITIES.map((r) => ({
-      value: r,
-      label: RARITY_LABELS[r],
-      hint: r === currentRoll.rarity ? "current" : undefined,
-    })),
-    initialValue: currentRoll.rarity,
-  });
-  if (p.isCancel(rarity)) { p.cancel(); process.exit(0); }
-
-  const eye = await p.select({
-    message: "Eye",
-    options: EYES.map((e) => ({
-      value: e,
-      label: e,
-      hint: e === currentRoll.eye ? "current" : undefined,
-    })),
-    initialValue: currentRoll.eye,
-  });
-  if (p.isCancel(eye)) { p.cancel(); process.exit(0); }
-
-  let hat = "none";
-  if (rarity === "common") {
-    p.log.info("Common rarity always gets hat=none");
-  } else {
-    hat = await p.select({
-      message: "Hat",
-      options: HATS.map((h) => ({
-        value: h,
-        label: h,
-        hint: h === currentRoll.hat ? "current" : undefined,
-      })),
-      initialValue: currentRoll.hat === "none" ? "crown" : currentRoll.hat,
-    });
-    if (p.isCancel(hat)) { p.cancel(); process.exit(0); }
-  }
-
-  const shiny = await p.confirm({
-    message: "Shiny?",
-    initialValue: false,
-  });
-  if (p.isCancel(shiny)) { p.cancel(); process.exit(0); }
-
-  const target = { species, rarity, eye, hat, shiny };
-
-  if (matches(currentRoll, target)) {
-    p.outro("Already matching! No changes needed.");
-    return;
-  }
-
-  p.log.info(`Target: ${species} / ${rarity} / eye:${eye} / hat:${hat}${shiny ? " / shiny" : ""}`);
-
-  const confirm = await p.confirm({ message: "Search and apply?" });
-  if (p.isCancel(confirm) || !confirm) { p.cancel(); process.exit(0); }
-
-  if (isClaudeRunning()) {
-    p.log.warn("Claude Code appears to be running. Quit it before patching to avoid issues.");
-    const proceed = await p.confirm({ message: "Patch anyway?" });
-    if (p.isCancel(proceed) || !proceed) { p.cancel(); process.exit(0); }
-  }
-
-  const spinner = p.spinner();
-  spinner.start("Searching for matching salt...");
-
-  const found = bruteForce(userId, target, spinner);
-  if (!found) {
-    spinner.stop("No matching salt found. Try relaxing constraints.");
-    process.exit(1);
-  }
-  spinner.stop(`Found in ${found.checked.toLocaleString()} attempts (${(found.elapsed / 1000).toFixed(1)}s)`);
-
-  p.note(formatRoll(found.result), "New companion");
-
-  const backupPath = binaryPath + ".backup";
-  if (!existsSync(backupPath)) {
-    copyFileSync(binaryPath, backupPath);
-    p.log.info(`Backup saved to ${backupPath}`);
-  }
-
-  const patchCount = patchBinary(binaryPath, currentSalt, found.salt);
-  p.log.success(`Patched ${patchCount} occurrence(s)`);
-
-  if (resignBinary(binaryPath)) {
-    p.log.success("Binary re-signed (ad-hoc codesign)");
-  }
-
-  clearCompanion(configPath);
-  p.log.success("Companion data cleared");
-
-  p.outro("Done! Restart Claude Code and run /buddy to hatch your new companion.");
 }
 
 // ── Non-interactive mode ─────────────────────────────────────────────────
 
-function nonInteractiveMode(args, binaryPath, configPath, userId) {
+async function nonInteractiveMode(args, binaryPath, configPath, userId) {
   console.log(`  Binary:  ${binaryPath}`);
   console.log(`  Config:  ${configPath}`);
   console.log(`  User ID: ${userId.slice(0, 8)}...`);
@@ -467,7 +375,7 @@ function nonInteractiveMode(args, binaryPath, configPath, userId) {
   if (args.current) {
     const result = rollFrom(currentSalt, userId);
     console.log(`\n  Current companion (salt: ${currentSalt}):`);
-    console.log(formatRoll(result));
+    console.log(formatCompanionCard(result));
     console.log();
     return;
   }
@@ -500,7 +408,7 @@ function nonInteractiveMode(args, binaryPath, configPath, userId) {
 
   const currentRoll = rollFrom(currentSalt, userId);
   if (matches(currentRoll, target)) {
-    console.log("  ✓ Already matches!\n" + formatRoll(currentRoll));
+    console.log("  ✓ Already matches!\n" + formatCompanionCard(currentRoll));
     return;
   }
 
@@ -509,13 +417,13 @@ function nonInteractiveMode(args, binaryPath, configPath, userId) {
   }
 
   console.log("  Searching...");
-  const found = bruteForce(userId, target, null);
+  const found = await bruteForce(userId, target, null);
   if (!found) {
     console.error("  ✗ No matching salt found. Try relaxing constraints.");
     process.exit(1);
   }
   console.log(`  ✓ Found in ${found.checked.toLocaleString()} attempts (${(found.elapsed / 1000).toFixed(1)}s)`);
-  console.log(formatRoll(found.result));
+  console.log(formatCompanionCard(found.result));
 
   const backupPath = binaryPath + ".backup";
   if (!existsSync(backupPath)) {
@@ -603,7 +511,7 @@ async function main() {
   if (!hasTargetFlags && !isCommand) {
     await interactiveMode(binaryPath, configPath, userId);
   } else {
-    nonInteractiveMode(args, binaryPath, configPath, userId);
+    await nonInteractiveMode(args, binaryPath, configPath, userId);
   }
 }
 
