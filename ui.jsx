@@ -95,8 +95,8 @@ function PreviewCard({ species, rarity, eye, hat, shiny, stats }) {
     <Box flexDirection="column" borderStyle="round" borderColor={color} paddingX={1}>
       <Box>
         <Box flexDirection="column">
-          {sprite.map((line, i) => (
-            <Text key={i} color={color}>{line}</Text>
+          {sprite.map((line, lineIdx) => (
+            <Text key={`sprite-${lineIdx}-${line.trim()}`} color={color}>{line}</Text>
           ))}
         </Box>
         <Box flexDirection="column" marginLeft={2}>
@@ -168,8 +168,8 @@ function SpeciesStep({ speciesList, current, onChange, onSubmit, onBack, isActiv
 
 function SearchStep({ userId, target, bruteForce, onFound, onFail, isActive }) {
   const [progress, setProgress] = useState("");
-  const [error, setError] = useState(null);
   const cancelRef = useRef(false);
+  const hasStarted = useRef(false);
   const { exit } = useApp();
 
   useInput((input, key) => {
@@ -180,6 +180,8 @@ function SearchStep({ userId, target, bruteForce, onFound, onFail, isActive }) {
   }, { isActive });
 
   useEffect(() => {
+    if (hasStarted.current) return;
+    hasStarted.current = true;
     (async () => {
       const found = await bruteForce(userId, target, (checked, elapsed) => {
         if (!cancelRef.current) {
@@ -188,18 +190,9 @@ function SearchStep({ userId, target, bruteForce, onFound, onFail, isActive }) {
       });
       if (cancelRef.current) return;
       if (found) onFound(found);
-      else setError("No matching salt found. Try relaxing constraints.");
+      else onFail();
     })();
-  }, []);
-
-  if (error) {
-    return (
-      <Box flexDirection="column">
-        <Text color="red">✗ {error}</Text>
-        <KeyHint>Press esc to exit</KeyHint>
-      </Box>
-    );
-  }
+  }, [bruteForce, userId, target, onFound, onFail]);
 
   return (
     <Box flexDirection="column">
@@ -211,6 +204,7 @@ function SearchStep({ userId, target, bruteForce, onFound, onFail, isActive }) {
 
 function DoneStep({ messages, isActive }) {
   const { exit } = useApp();
+  const hasErrors = messages.some((msg) => msg.type === "error");
 
   useInput(() => {
     exit();
@@ -218,11 +212,17 @@ function DoneStep({ messages, isActive }) {
 
   return (
     <Box flexDirection="column">
-      {messages.map((msg, i) => (
-        <Text key={i} color="green">✓ {msg}</Text>
+      {messages.map((msg) => (
+        <Text key={`${msg.type}-${msg.text}`} color={msg.type === "error" ? "red" : "green"}>
+          {msg.type === "error" ? "✗ " : "✓ "}{msg.text}
+        </Text>
       ))}
       <Box marginTop={1}>
-        <Text bold>Done! Restart Claude Code and run /buddy to hatch your new companion.</Text>
+        <Text bold>
+          {hasErrors
+            ? "Unable to finish. Resolve the issue above and try again."
+            : "Done! Restart Claude Code and run /buddy to hatch your new companion."}
+        </Text>
       </Box>
       <KeyHint>Press any key to exit</KeyHint>
     </Box>
@@ -243,7 +243,7 @@ function App({ opts }) {
   const { exit } = useApp();
   const {
     currentRoll, currentSalt, binaryPath, configPath, userId,
-    bruteForce, patchBinary, resignBinary, clearCompanion, isClaudeRunning,
+    bruteForce, patchBinary, resignBinary, clearCompanion, getPatchability, isClaudeRunning,
     rollFrom, matches, SPECIES, RARITIES, RARITY_LABELS, EYES, HATS,
   } = opts;
 
@@ -294,16 +294,29 @@ function App({ opts }) {
               if (action === "current") {
                 setStep("showCurrent");
               } else if (action === "restore") {
-                const backupPath = binaryPath + ".backup";
-                if (!existsSync(backupPath)) {
-                  setDoneMessages(["No backup found. Nothing to restore."]);
+                const patchability = getPatchability(binaryPath);
+                if (!patchability.ok) {
+                  setDoneMessages([{ type: "error", text: patchability.message }]);
                   setStep("done");
                   return;
                 }
-                copyFileSync(backupPath, binaryPath);
-                resignBinary(binaryPath);
-                clearCompanion(configPath);
-                setDoneMessages(["Restored! Restart Claude Code and run /buddy."]);
+
+                const { backupPath } = patchability;
+                if (!existsSync(backupPath)) {
+                  setDoneMessages([{ type: "info", text: "No backup found. Nothing to restore." }]);
+                  setStep("done");
+                  return;
+                }
+
+                try {
+                  copyFileSync(backupPath, binaryPath);
+                  resignBinary(binaryPath);
+                  clearCompanion(configPath);
+                  setDoneMessages([{ type: "success", text: "Restored! Restart Claude Code and run /buddy." }]);
+                } catch (err) {
+                  setDoneMessages([{ type: "error", text: err.message }]);
+                }
+
                 setStep("done");
               } else {
                 setStep("species");
@@ -373,7 +386,7 @@ function App({ opts }) {
             onConfirm={() => {
               setShiny(true);
               if (matches(currentRoll, buildTarget(true))) {
-                setDoneMessages(["Already matching! No changes needed."]);
+                setDoneMessages([{ type: "success", text: "Already matching! No changes needed." }]);
                 setStep("done");
               } else {
                 setStep("confirm");
@@ -382,7 +395,7 @@ function App({ opts }) {
             onCancel={() => {
               setShiny(false);
               if (matches(currentRoll, buildTarget(false))) {
-                setDoneMessages(["Already matching! No changes needed."]);
+                setDoneMessages([{ type: "success", text: "Already matching! No changes needed." }]);
                 setStep("done");
               } else {
                 setStep("confirm");
@@ -399,7 +412,15 @@ function App({ opts }) {
             <ConfirmSelect
               label="Search and apply?"
               isActive={step === "confirm"}
-              onConfirm={() => setStep("search")}
+              onConfirm={() => {
+                const patchability = getPatchability(binaryPath);
+                if (!patchability.ok) {
+                  setDoneMessages([{ type: "error", text: patchability.message }]);
+                  setStep("done");
+                  return;
+                }
+                setStep("search");
+              }}
               onCancel={() => exit()}
               onBack={() => goBack()}
             />
@@ -413,7 +434,7 @@ function App({ opts }) {
             bruteForce={bruteForce}
             onFound={(f) => { setFound(f); setStep("result"); }}
             onFail={() => {
-              setDoneMessages(["No matching salt found. Try relaxing constraints."]);
+              setDoneMessages([{ type: "error", text: "No matching salt found. Try relaxing constraints." }]);
               setStep("done");
             }}
             isActive={step === "search"}
@@ -427,17 +448,30 @@ function App({ opts }) {
               label="Apply patch?"
               isActive={step === "result"}
               onConfirm={() => {
-                const msgs = [];
-                const backupPath = binaryPath + ".backup";
-                if (!existsSync(backupPath)) {
-                  copyFileSync(binaryPath, backupPath);
-                  msgs.push(`Backup saved to ${backupPath}`);
+                const patchability = getPatchability(binaryPath);
+                if (!patchability.ok) {
+                  setDoneMessages([{ type: "error", text: patchability.message }]);
+                  setStep("done");
+                  return;
                 }
-                const count = patchBinary(binaryPath, currentSalt, found.salt);
-                msgs.push(`Patched ${count} occurrence(s)`);
-                if (resignBinary(binaryPath)) msgs.push("Binary re-signed (ad-hoc codesign)");
-                clearCompanion(configPath);
-                msgs.push("Companion data cleared");
+
+                const msgs = [];
+                const { backupPath } = patchability;
+
+                try {
+                  if (!existsSync(backupPath)) {
+                    copyFileSync(binaryPath, backupPath);
+                    msgs.push({ type: "success", text: `Backup saved to ${backupPath}` });
+                  }
+                  const count = patchBinary(binaryPath, currentSalt, found.salt);
+                  msgs.push({ type: "success", text: `Patched ${count} occurrence(s)` });
+                  if (resignBinary(binaryPath)) msgs.push({ type: "success", text: "Binary re-signed (ad-hoc codesign)" });
+                  clearCompanion(configPath);
+                  msgs.push({ type: "success", text: "Companion data cleared" });
+                } catch (err) {
+                  msgs.push({ type: "error", text: err.message });
+                }
+
                 setDoneMessages(msgs);
                 setStep("done");
               }}

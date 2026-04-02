@@ -6,13 +6,21 @@
   "bin": {
     "buddy-reroll": "index.js"
   },
+  "scripts": {
+    "test": "bun test lib/",
+    "help": "bun run index.js --help",
+    "list": "bun run index.js --list",
+    "verify:runtime": "bun run scripts/verify-runtime.js",
+    "verify": "bun run test && bun run help && bun run list && bun run verify:runtime && npm pack --dry-run"
+  },
   "files": [
     "index.js",
+    "lib",
     "ui.jsx",
     "sprites.js"
   ],
   "engines": {
-    "bun": ">=1.0.0"
+    "node": ">=20.0.0"
   },
   "license": "MIT",
   "repository": {
