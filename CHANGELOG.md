@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/grayashh/buddy-reroll/compare/v0.3.0...v0.3.1) (2026-04-02)
+
+
+### Bug Fixes
+
+* deep review — interactive parallel search, state machine gaps, estimator bug, terminology ([f310335](https://github.com/grayashh/buddy-reroll/commit/f3103357f53a277df1f45f8eb08c6f40a79df465))
+* patch verification, auto-hook by default, friendlier messages, worker error reporting ([2994335](https://github.com/grayashh/buddy-reroll/commit/299433570542802e30242cc89f976363a27b9592))
+
 ## [0.3.0](https://github.com/grayashh/buddy-reroll/compare/v0.2.1...v0.3.0) (2026-04-02)
 
 
