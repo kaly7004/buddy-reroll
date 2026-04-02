@@ -130,6 +130,7 @@ function ShowCurrentStep({ isActive }) {
 
   useInput(() => {
     exit();
+    setTimeout(() => process.exit(0), 100);
   }, { isActive });
 
   return (
@@ -218,6 +219,7 @@ function DoneStep({ messages, isActive }) {
 
   useInput(() => {
     exit();
+    setTimeout(() => process.exit(0), 100);
   }, { isActive });
 
   return (

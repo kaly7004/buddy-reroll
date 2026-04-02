@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync, existsSync, copyFileSync, renameSync, unlinkSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, copyFileSync, renameSync, unlinkSync, statSync, chmodSync } from "fs";
 import { platform } from "os";
 import { execFileSync, spawnSync } from "child_process";
 import { parseArgs } from "util";
@@ -75,6 +75,7 @@ function patchBinary(binaryPath, oldSalt, newSalt) {
     throw new Error(`Salt length mismatch: "${oldSalt}" (${oldSalt.length}) vs "${newSalt}" (${newSalt.length})`);
   }
 
+  const originalMode = statSync(binaryPath).mode;
   const data = readFileSync(binaryPath);
   const oldBuf = Buffer.from(oldSalt);
   const newBuf = Buffer.from(newSalt);
@@ -96,7 +97,7 @@ function patchBinary(binaryPath, oldSalt, newSalt) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const tmpPath = binaryPath + ".tmp";
-      writeFileSync(tmpPath, data);
+      writeFileSync(tmpPath, data, { mode: originalMode });
       try {
         renameSync(tmpPath, binaryPath);
       } catch {
@@ -105,6 +106,8 @@ function patchBinary(binaryPath, oldSalt, newSalt) {
         }
         renameSync(tmpPath, binaryPath);
       }
+
+      chmodSync(binaryPath, originalMode);
 
       const verify = readFileSync(binaryPath);
       const found = verify.indexOf(Buffer.from(newSalt));
