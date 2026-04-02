@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/grayashh/buddy-reroll/compare/v0.3.2...v0.3.3) (2026-04-02)
+
+
+### Bug Fixes
+
+* use correct Claude Code hook format (matcher+hooks object), auto-fix permissions in --doctor ([f71315c](https://github.com/grayashh/buddy-reroll/commit/f71315ca2ee91bff3a390acd92a56edc75116139))
+
 ## [0.3.2](https://github.com/grayashh/buddy-reroll/compare/v0.3.1...v0.3.2) (2026-04-02)
 
 
