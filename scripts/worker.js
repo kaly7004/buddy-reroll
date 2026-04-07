@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { rollFrom, matches } from "../lib/companion.js";
+import { rollFrom, matches, setNodeHashMode } from "../lib/companion.js";
 
 const SALT_LEN = 15;
 const CHARSET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
@@ -21,6 +21,8 @@ try {
   process.stderr.write("Invalid target JSON\n");
   process.exit(1);
 }
+
+if (process.argv.includes("--node-hash")) setNodeHashMode(true);
 
 if (!userId || !target) {
   process.stderr.write("Usage: worker.js <userId> '<targetJSON>'\n");

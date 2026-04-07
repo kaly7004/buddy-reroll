@@ -18,9 +18,10 @@ import {
   findCurrentSalt,
   matches,
   rollFrom,
+  setNodeHashMode,
 } from "./lib/companion.js";
 import { formatDoctorReport, getDoctorReport } from "./lib/doctor.js";
-import { findBinaryPath, findConfigPath, getClaudeBinaryOverride, getPatchability } from "./lib/runtime.js";
+import { findBinaryPath, findConfigPath, getClaudeBinaryOverride, getPatchability, isBunBinary } from "./lib/runtime.js";
 import { parallelBruteForce } from "./lib/finder.js";
 import { estimateAttempts, formatProgress } from "./lib/estimator.js";
 import { installHook, removeHook, storeSalt, readStoredSalt } from "./lib/hooks.js";
@@ -265,7 +266,7 @@ function formatCompanionCard(result) {
 
 // ── Interactive mode ─────────────────────────────────────────────────────
 
-async function interactiveMode(binaryPath, configPath, userId) {
+async function interactiveMode(binaryPath, configPath, userId, nodeHash) {
   const { currentSalt, currentRoll } = readCurrentCompanion(binaryPath, userId);
 
   const uiOpts = {
@@ -274,7 +275,7 @@ async function interactiveMode(binaryPath, configPath, userId) {
     binaryPath,
     configPath,
     userId,
-    bruteForce: parallelBruteForce,
+    bruteForce: (uid, tgt, onProg, sig) => parallelBruteForce(uid, tgt, onProg, sig, { nodeHash }),
     patchBinary,
     resignBinary,
     clearCompanion,
@@ -303,7 +304,7 @@ async function interactiveMode(binaryPath, configPath, userId) {
 
 // ── Non-interactive mode ─────────────────────────────────────────────────
 
-async function nonInteractiveMode(args, binaryPath, configPath, userId) {
+async function nonInteractiveMode(args, binaryPath, configPath, userId, nodeHash) {
   console.log(`  Binary:  ${binaryPath}`);
   console.log(`  Config:  ${configPath}`);
   console.log(`  User ID: ${userId.slice(0, 8)}...`);
@@ -357,7 +358,7 @@ async function nonInteractiveMode(args, binaryPath, configPath, userId) {
   try {
     found = await parallelBruteForce(userId, target, (attempts, elapsed, est, workers) => {
       process.stdout.write(`\r  ${formatProgress(attempts, elapsed, est, workers)}`);
-    });
+    }, undefined, { nodeHash });
   } catch (err) {
     fail(`\n  ✗ ${err.message}`);
   }
@@ -536,6 +537,9 @@ async function main() {
     fail("✗ Could not find Claude Code binary. Checked PATH and known install locations.");
   }
 
+  const nodeHash = !isBunBinary(binaryPath);
+  if (nodeHash) setNodeHashMode(true);
+
   const configPath = findConfigPath();
   if (!configPath) fail("✗ Could not find Claude Code config file. Checked ~/.claude/.config.json and ~/.claude.json.");
 
@@ -548,9 +552,9 @@ async function main() {
   const isCommand = args.restore || args.current || args.doctor || args.hook || args.unhook || args["apply-hook"];
 
   if (!hasTargetFlags && !isCommand) {
-    await interactiveMode(binaryPath, configPath, userId);
+    await interactiveMode(binaryPath, configPath, userId, nodeHash);
   } else {
-    await nonInteractiveMode(args, binaryPath, configPath, userId);
+    await nonInteractiveMode(args, binaryPath, configPath, userId, nodeHash);
   }
 }
 
