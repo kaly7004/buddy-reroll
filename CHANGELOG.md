@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.8](https://github.com/grayashh/buddy-reroll/compare/v0.3.7...v0.3.8) (2026-04-07)
+
+
+### Bug Fixes
+
+* detect Claude runtime and use matching hash function ([6c29191](https://github.com/grayashh/buddy-reroll/commit/6c291918028783951cde9274763848c442b9b219)), closes [#17](https://github.com/grayashh/buddy-reroll/issues/17)
+
 ## [0.3.7](https://github.com/grayashh/buddy-reroll/compare/v0.3.6...v0.3.7) (2026-04-05)
 
 
