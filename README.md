@@ -1,5 +1,12 @@
 # buddy-reroll
 
+> [!IMPORTANT]
+> **This project is no longer maintained.**
+> As of Claude Code v2.1.97, the `/buddy` command has been removed.
+> Meet your buddy in [Notch](https://github.com/talkvalue/Buddi) instead — a new home for buddies.
+
+---
+
 Pick the perfect [Claude Code](https://docs.anthropic.com/en/docs/claude-code) `/buddy` companion — any species, rarity, eye, hat, shiny, and stat combination you want.
 
 <img width="1390" height="1010" alt="buddy-reroll screenshot" src="https://github.com/user-attachments/assets/0786f4b8-35e2-4433-90af-25a0d9ebe1a9" />
